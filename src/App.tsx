@@ -7,6 +7,7 @@ import { IndicesPanel } from './ui/IndicesPanel'
 import { Hodograph } from './ui/Hodograph'
 import { DriftMap } from './ui/DriftMap'
 import { Profiles } from './ui/Profiles'
+import { SarsPanel } from './ui/SarsPanel'
 import { StatusBar } from './ui/StatusBar'
 import { Section } from './ui/Section'
 import { SkewTCanvas } from './skewt/SkewTCanvas'
@@ -70,6 +71,9 @@ export default function App() {
               {analysis ? (
                 <>
                   <IndicesPanel />
+                  <Section title="SARS analogues" id="sars">
+                    <SarsPanel />
+                  </Section>
                   <Section title="Hodograph" id="hodo">
                     <Hodograph />
                   </Section>

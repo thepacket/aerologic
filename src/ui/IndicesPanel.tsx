@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useStore } from '../state/store'
 import { MS2KT, dirSpeedFromUV } from '../met/kinematics'
 import type { ParcelResult } from '../met/parcel'
+import { pwClimo } from '../met/pwclimo'
 import { Section } from './Section'
 
 function Row({ k, v, cls }: { k: string; v: ReactNode; cls?: string }) {
@@ -116,6 +117,19 @@ export function IndicesPanel() {
 
       <Section title="Thermodynamics" id="thermo">
         <Row k="PW" v={f(a.pw, 1, ' mm')} cls={grade(a.pw, 35, 50)} />
+        {(() => {
+          const month = new Date(sounding.validTime).getUTCMonth()
+          const climo = pwClimo(sounding.station.id, month, a.pw)
+          if (!climo) return null
+          const s = climo.sigma
+          return (
+            <Row
+              k="vs climo"
+              v={`${s >= 0 ? '+' : ''}${s.toFixed(1)}σ · mean ${climo.meanMM.toFixed(0)} mm`}
+              cls={s >= 2 ? 'idx-hot' : s >= 1 ? 'idx-warn' : ''}
+            />
+          )
+        })()}
         <Row k="K index" v={f(a.k, 0)} cls={grade(a.k, 30, 38)} />
         <Row k="Totals" v={f(a.totalTotals, 0)} cls={grade(a.totalTotals, 48, 54)} />
         <Row k="SWEAT" v={f(a.sweat, 0)} cls={grade(a.sweat, 300, 400)} />

@@ -36,6 +36,7 @@ export interface Analysis {
   shear3: number
   shear6: number
   shear8: number
+  shear9: number
   meanWind06: { u: number; v: number }
   bunkersRight: { u: number; v: number }
   bunkersLeft: { u: number; v: number }
@@ -170,7 +171,7 @@ export function analyzeSounding(snd: Sounding): Analysis | null {
   }
 
   // kinematics
-  let shear1 = NaN, shear3 = NaN, shear6 = NaN, shear8 = NaN
+  let shear1 = NaN, shear3 = NaN, shear6 = NaN, shear8 = NaN, shear9 = NaN
   let mw06 = { u: NaN, v: NaN }
   let bR = { u: NaN, v: NaN }
   let bL = { u: NaN, v: NaN }
@@ -182,6 +183,7 @@ export function analyzeSounding(snd: Sounding): Analysis | null {
     shear3 = bulkShear(wind, 0, 3000).mag
     shear6 = bulkShear(wind, 0, 6000).mag
     shear8 = bulkShear(wind, 0, 8000).mag
+    shear9 = bulkShear(wind, 0, 9000).mag
     const bk = bunkersStormMotion(wind)
     mw06 = bk.mean
     bR = bk.right
@@ -279,7 +281,7 @@ export function analyzeSounding(snd: Sounding): Analysis | null {
     sweat,
     showalter,
     thetaEMin: { value: thetaEMin.value, p: thetaEMin.p },
-    shear1, shear3, shear6, shear8,
+    shear1, shear3, shear6, shear8, shear9,
     meanWind06: mw06,
     bunkersRight: bR,
     bunkersLeft: bL,

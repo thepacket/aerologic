@@ -43,6 +43,16 @@ All from scratch in `src/met/` (validated against Wyoming's own indices):
 - Winter: dendritic growth zone depth and mean RH
 - Cloud and airframe-icing layer detection (drawn as bands on the diagram)
 - SHIP composite
+- **SARS analogues** — the current sounding is matched against the SPC
+  proximity-sounding databases (1,148 hail events, 1,875 supercells) using
+  the two-tier SPC algorithm, giving sig-hail / tornado probabilities and a
+  list of historical quality analogues. Databases by Ryan Jewell and Rich
+  Thompson (NOAA SPC), distributed with [SHARPpy](https://github.com/sharppy/SHARPpy)
+  (BSD); the matching logic is a TypeScript port of SHARPpy's `sars.py`.
+  The ~160 KB of database text is code-split into a lazy-loaded immutable
+  chunk, so it never weighs on initial page load.
+- **PW climatology** — precipitable water shown against the station's monthly
+  mean in ±σ (SPC climatology via SHARPpy; US and some Canadian stations)
 
 ## The diagram
 
