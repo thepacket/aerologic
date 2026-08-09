@@ -80,6 +80,37 @@ npm run dev             # Vite dev server on :5799 (proxies /api → :8642)
 Production: `npm run build && npm start` — serves the built SPA and the proxy
 from the single Node process on `:8642` (set `PORT` to override).
 
+## Deploy (Fly.io)
+
+The live instance runs at <https://aerologic.fly.dev>. The repo ships the
+whole deployment: a multi-stage [`Dockerfile`](Dockerfile) (Vite build →
+slim Node runtime with `server/` + `dist/`) and [`fly.toml`](fly.toml)
+(port 8642, HTTPS forced, health check on `/api/health`, machines auto-stop
+when idle so an unused instance costs ~nothing).
+
+To deploy your own copy:
+
+```bash
+fly auth login
+```
+
+```bash
+fly apps create <your-app-name>
+```
+
+Then point `fly.toml` at your app — edit the first line (`app = "<your-app-name>"`)
+and pick your `primary_region` — and ship it:
+
+```bash
+fly deploy --remote-only
+```
+
+`--remote-only` builds the image on Fly's builders, so you don't need Docker
+locally. Subsequent releases are just `fly deploy` again. No secrets or env
+vars are required — both upstream data sources (University of Wyoming,
+Open-Meteo) are public APIs, and the app is fully stateless (the proxy cache
+is in-memory, so it simply warms back up after a machine restart).
+
 ## Layout
 
 ```
