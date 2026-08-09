@@ -19,6 +19,7 @@ export function TitleBar() {
   const clearReference = useStore((s) => s.clearReference)
   const stageView = useStore((s) => s.stageView)
   const setStageView = useStore((s) => s.setStageView)
+  const setMode = useStore((s) => s.setMode)
 
   const title = sounding
     ? `${sounding.station.name}`
@@ -49,25 +50,27 @@ export function TitleBar() {
         >
           <Pencil size={12} />
         </button>
-        {mode === 'fcst' && (
-          <div className="segmented">
-            <button
-              className="seg-btn"
-              data-active={stageView === 'skewt'}
-              onClick={() => setStageView('skewt')}
-            >
-              SKEW-T
-            </button>
-            <button
-              className="seg-btn"
-              data-active={stageView === 'th'}
-              onClick={() => setStageView('th')}
-              title="BUFKIT-style time × height section of the model run"
-            >
-              TIME×HGT
-            </button>
-          </div>
-        )}
+        <div className="segmented">
+          <button
+            className="seg-btn"
+            data-active={mode !== 'fcst' || stageView === 'skewt'}
+            onClick={() => setStageView('skewt')}
+          >
+            SKEW-T
+          </button>
+          <button
+            className="seg-btn"
+            data-active={mode === 'fcst' && stageView === 'th'}
+            onClick={() => {
+              // time × height needs a model run; hop into forecast mode if needed
+              setStageView('th')
+              if (mode !== 'fcst') setMode('fcst')
+            }}
+            title="BUFKIT-style time × height section of the forecast run (switches to forecast mode)"
+          >
+            TIME×HGT
+          </button>
+        </div>
         {edits.length > 0 && (
           <button className="chip chip-warn" onClick={resetEdits} title="discard modifications">
             <Undo2 size={10} /> MODIFIED ×{edits.length}

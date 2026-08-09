@@ -542,15 +542,9 @@ export function TimeHeight() {
     }
   }, [hoverTH, dims, grid, windUnit])
 
-  if (!forecast) {
-    return (
-      <div className="stage-empty">
-        <div className="stage-empty-title">NO FORECAST LOADED</div>
-        <div className="stage-empty-sub">select a station or map point in forecast mode</div>
-      </div>
-    )
-  }
-
+  // NOTE: the wrapper must render even while the forecast is loading —
+  // the ResizeObserver attaches on mount, and an early return here would
+  // leave it observing nothing once the canvases appear.
   return (
     <div
       ref={wrapRef}
@@ -635,6 +629,12 @@ export function TimeHeight() {
               <span className="readout-v">{v}</span>
             </div>
           ))}
+        </div>
+      )}
+      {!forecast && (
+        <div className="stage-empty">
+          <div className="stage-empty-title">LOADING FORECAST…</div>
+          <div className="stage-empty-sub">select a station or map point if nothing loads</div>
         </div>
       )}
     </div>
