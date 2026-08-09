@@ -1,8 +1,7 @@
 # AEROLOGIC — Skew-T Sounding Viewer
 
 An interactive Skew-T log-P diagram for real radiosonde soundings and forecast
-profiles. Dark, dense, instrument-style UI; all thermodynamics computed
-in-browser from first principles.
+profiles.
 
 ![Skew-T view — Maniwaki 1-second BUFR sounding with hover readout](docs/skewt.png)
 
