@@ -162,8 +162,8 @@ const T_STOPS: [number, [number, number, number]][] = [
 const W_STOPS: [number, [number, number, number]][] = [
   [0, [12, 16, 26]],
   [15, [25, 90, 130]],
-  [30, [60, 180, 210]],
-  [50, [170, 235, 255]],
+  [30, [55, 165, 200]],
+  [50, [130, 215, 245]],
 ]
 
 function fieldColor(field: ThField, c: { t: number; rh: number; te: number; wspd: number }): string {
@@ -263,11 +263,15 @@ export function TimeHeight() {
       }
     }
 
-    // ── isotherm overlay: crossings per column, connected between columns
+    // ── isotherm overlay: crossings per column, connected between columns.
+    // A dark halo keeps the lines legible over bright heatmap regions.
+    ctx.save()
+    ctx.shadowColor = 'rgba(7, 9, 12, 0.9)'
+    ctx.shadowBlur = 3
     const isotherms = [-40, -30, -20, -10, 0, 10, 20]
     for (const iso of isotherms) {
-      ctx.strokeStyle = iso === 0 ? 'rgba(127, 192, 232, 0.85)' : 'rgba(238, 243, 250, 0.16)'
-      ctx.lineWidth = iso === 0 ? 1.4 : 1
+      ctx.strokeStyle = iso === 0 ? 'rgba(127, 192, 232, 0.95)' : 'rgba(238, 243, 250, 0.35)'
+      ctx.lineWidth = iso === 0 ? 1.6 : 1
       let prev: number[] = []
       for (let i = 0; i < n; i++) {
         // find crossings scanning levels bottom-up
@@ -311,10 +315,15 @@ export function TimeHeight() {
       }
     }
 
-    // ── wind barbs (subsampled grid)
+    ctx.restore()
+
+    // ── wind barbs (subsampled grid), same dark halo for contrast
+    ctx.save()
+    ctx.shadowColor = 'rgba(7, 9, 12, 0.9)'
+    ctx.shadowBlur = 2.5
     const hourStride = Math.max(1, Math.ceil(30 / dx))
-    ctx.strokeStyle = 'rgba(169, 184, 207, 0.75)'
-    ctx.fillStyle = 'rgba(169, 184, 207, 0.75)'
+    ctx.strokeStyle = 'rgba(190, 205, 228, 0.95)'
+    ctx.fillStyle = 'rgba(190, 205, 228, 0.95)'
     ctx.lineWidth = 1
     const barbLevels = [925, 850, 700, 600, 500, 400, 300, 250, 200, 150]
     for (let i = 0; i < n; i += hourStride) {
@@ -327,6 +336,7 @@ export function TimeHeight() {
         drawSmallBarb(ctx, x(i), y(lp), c.wdir, c.wspd * MS2KT)
       }
     }
+    ctx.restore()
 
     // ── day boundaries + time axis
     ctx.font = '9px ui-monospace, Menlo, monospace'
