@@ -329,15 +329,19 @@ export function drawData(
     const envT: { p: number; v: number }[] = []
     for (let i = 0; i < prof.p.length; i++) envT.push({ p: prof.p[i], v: prof.tv[i] - 273.15 })
     const region = (positive: boolean) => {
+      // CIN shading only exists below an LFC — mirroring how the CIN number
+      // itself is defined. A stable parcel with no LFC gets no negative fill
+      // (otherwise the whole stable atmosphere would be painted).
+      if (!positive && Number.isNaN(parcel.lfcP)) return
       ctx.beginPath()
       let started = false
       const pts = parcel.curve.filter((c) => c.p <= parcel.p0)
+      const use = (c: (typeof pts)[number], b: number) =>
+        positive ? b > 0 : b < 0 && c.p > parcel.lfcP
       for (const c of pts) {
-        const envTv = interpEnvTv(analysis, c.p)
-        const b = c.tv - envTv
-        const use = positive ? b > 0 : b < 0 && (Number.isNaN(parcel.lfcP) || c.p > parcel.lfcP)
-        const y = yFromP(d, c.p)
-        if (use) {
+        const b = c.tv - interpEnvTv(analysis, c.p)
+        if (use(c, b)) {
+          const y = yFromP(d, c.p)
           const x = xFromTY(d, c.tv - 273.15, y)
           if (!started) {
             ctx.moveTo(x, y)
@@ -349,8 +353,7 @@ export function drawData(
         const c = pts[i]
         const envTv = interpEnvTv(analysis, c.p)
         const b = c.tv - envTv
-        const use = positive ? b > 0 : b < 0 && (Number.isNaN(parcel.lfcP) || c.p > parcel.lfcP)
-        if (use) {
+        if (use(c, b)) {
           const y = yFromP(d, c.p)
           ctx.lineTo(xFromTY(d, envTv - 273.15, y), y)
         }
