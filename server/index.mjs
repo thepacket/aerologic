@@ -98,24 +98,52 @@ async function handleWyoming(req, res, url) {
   }
 }
 
-/** Cold-start mitigation: the Fly machine auto-stops when idle, wiping the
- *  in-memory cache — so warm the station lists for the two most recent
- *  cycles the moment the process boots, while the browser is still loading
- *  the page shell. */
-function warmCache() {
-  const now = new Date()
-  now.setUTCMinutes(0, 0, 0)
-  now.setUTCHours(now.getUTCHours() >= 12 ? 12 : 0)
-  if (Date.now() - now.getTime() < 75 * 60 * 1000) now.setUTCHours(now.getUTCHours() - 12)
+/** Keep the caches that gate first paint permanently warm.
+ *
+ *  Runs at boot and every 5 minutes: station lists for the wall-clock cycle
+ *  (even before clients switch to it — a brand-new cycle can take Wyoming a
+ *  minute to build near launch time) plus the two before it, and the default
+ *  station's sounding for the client-visible latest cycle. Skips anything
+ *  already fresh, so steady-state cost is one refresh per TTL expiry. */
+const DEFAULT_STATION = '71722'
+
+function cycleStr(d) {
   const p = (n) => String(n).padStart(2, '0')
-  for (let i = 0; i < 2; i++) {
-    const d = new Date(now.getTime() - i * 12 * 3.6e6)
-    const dt = `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:00:00`
-    // serialize exactly like handleWyoming does, so the cache key matches
-    const sp = new URLSearchParams({ datetime: dt })
-    const upstream = `https://weather.uwyo.edu/wsgi/sounding_json?${sp.toString()}`
-    fetchAndCache(upstream, 'application/json', dt).catch(() => {})
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:00:00`
+}
+
+function warmOne(path, params, datetimeParam, type) {
+  // serialize exactly like handleWyoming does, so the cache key matches
+  const sp = new URLSearchParams(params)
+  const upstream = `https://weather.uwyo.edu/wsgi/${path}?${sp.toString()}`
+  const hit = cache.get(upstream)
+  if (hit && hit.expires > Date.now()) return
+  fetchAndCache(upstream, type, datetimeParam).catch(() => {})
+}
+
+function warmCache() {
+  const wallCycle = new Date()
+  wallCycle.setUTCMinutes(0, 0, 0)
+  wallCycle.setUTCHours(wallCycle.getUTCHours() >= 12 ? 12 : 0)
+
+  // station lists: upcoming/current cycle + the two before it
+  for (let i = 0; i < 3; i++) {
+    const dt = cycleStr(new Date(wallCycle.getTime() - i * 12 * 3.6e6))
+    warmOne('sounding_json', { datetime: dt }, dt, 'application/json')
   }
+
+  // default station's sounding for the cycle clients actually load first
+  const effective = new Date(wallCycle)
+  if (Date.now() - effective.getTime() < 75 * 60 * 1000) {
+    effective.setUTCHours(effective.getUTCHours() - 12)
+  }
+  const dtEff = cycleStr(effective)
+  warmOne(
+    'sounding',
+    { datetime: dtEff, id: DEFAULT_STATION, 'type': 'TEXT:CSV', src: 'BUFR' },
+    dtEff,
+    'text/plain; charset=utf-8',
+  )
 }
 
 async function serveStatic(req, res, url) {
@@ -159,4 +187,5 @@ http
   .listen(PORT, () => {
     console.log(`skew-t server on :${PORT}`)
     warmCache()
+    setInterval(warmCache, 5 * 60 * 1000)
   })
