@@ -104,6 +104,9 @@ interface AppState {
   forecastHour: number
   model: string
   fcstLoading: boolean
+  /** additional models overlaid for comparison, id → data (null = loading) */
+  compareModels: string[]
+  compareData: Record<string, ForecastData | null>
 
   parcelKind: ParcelKind
   windUnit: WindUnit
@@ -159,6 +162,7 @@ interface AppState {
   setStageView: (v: StageView) => void
   setThField: (f: ThField) => void
   setThAdjust: (brightness: number, contrast: number) => void
+  toggleCompareModel: (id: string) => Promise<void>
 }
 
 const DEFAULT_DOMAIN: [number, number] = [1050, 100]
@@ -188,6 +192,8 @@ export const useStore = create<AppState>((set, get) => ({
   forecastHour: 0,
   model: 'best_match',
   fcstLoading: false,
+  compareModels: [],
+  compareData: {},
 
   parcelKind: 'mu',
   windUnit: 'kt',
@@ -247,6 +253,10 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   selectStation: async (s) => {
+    // comparison overlays are per-location
+    if (get().selected?.stationid !== s.stationid) {
+      set({ compareData: {}, compareModels: [] })
+    }
     set({ selected: s, loading: true, error: null })
     if (!s.stationid.startsWith('@')) {
       const recents = [s.stationid, ...get().recents.filter((r) => r !== s.stationid)].slice(0, 6)
@@ -355,6 +365,28 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   clearReference: () => set({ reference: null }),
+
+  toggleCompareModel: async (id) => {
+    const { compareModels, selected } = get()
+    if (compareModels.includes(id)) {
+      set({ compareModels: compareModels.filter((m) => m !== id) })
+      return
+    }
+    set({ compareModels: [...compareModels, id] })
+    if (!selected || get().compareData[id]) return
+    set((s) => ({ compareData: { ...s.compareData, [id]: null } }))
+    try {
+      const fc = await fetchForecast(selected.lat, selected.lon, id)
+      // station may have changed while fetching
+      if (get().selected?.stationid !== selected.stationid) return
+      set((s) => ({ compareData: { ...s.compareData, [id]: fc } }))
+    } catch {
+      set((s) => ({
+        compareModels: s.compareModels.filter((m) => m !== id),
+        compareData: { ...s.compareData, [id]: null },
+      }))
+    }
+  },
 
   setStageView: (stageView) => set({ stageView }),
   setThField: (thField) => set({ thField }),

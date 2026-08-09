@@ -7,15 +7,19 @@ export const OM_LEVELS = [
 ] as const
 
 export const OM_MODELS = [
-  { id: 'best_match', label: 'Best match' },
-  { id: 'gfs_seamless', label: 'NOAA GFS' },
-  { id: 'gfs_hrrr', label: 'NOAA HRRR' },
-  { id: 'ecmwf_ifs025', label: 'ECMWF IFS 0.25°' },
-  { id: 'icon_seamless', label: 'DWD ICON' },
-  { id: 'gem_seamless', label: 'CMC GEM' },
-  { id: 'meteofrance_seamless', label: 'Météo-France' },
-  { id: 'ukmo_seamless', label: 'UK Met Office' },
+  { id: 'best_match', label: 'Best match', short: 'BEST', color: '#eef3fa' },
+  { id: 'gfs_seamless', label: 'NOAA GFS', short: 'GFS', color: '#ff6bd6' },
+  { id: 'gfs_hrrr', label: 'NOAA HRRR', short: 'HRRR', color: '#ffb454' },
+  { id: 'ecmwf_ifs025', label: 'ECMWF IFS 0.25°', short: 'ECMWF', color: '#48d6ff' },
+  { id: 'icon_seamless', label: 'DWD ICON', short: 'ICON', color: '#b5e84f' },
+  { id: 'gem_seamless', label: 'CMC GEM', short: 'GEM', color: '#c792ea' },
+  { id: 'meteofrance_seamless', label: 'Météo-France', short: 'MF', color: '#7fa8e8' },
+  { id: 'ukmo_seamless', label: 'UK Met Office', short: 'UKMO', color: '#d4c267' },
 ] as const
+
+export function modelMeta(id: string) {
+  return OM_MODELS.find((m) => m.id === id) ?? { id, label: id, short: id.toUpperCase(), color: '#93a1b5' }
+}
 
 export interface ForecastData {
   lat: number

@@ -74,6 +74,8 @@ function ForecastControls() {
   const model = useStore((s) => s.model)
   const setModel = useStore((s) => s.setModel)
   const fcstLoading = useStore((s) => s.fcstLoading)
+  const compareModels = useStore((s) => s.compareModels)
+  const toggleCompareModel = useStore((s) => s.toggleCompareModel)
   const [playing, setPlaying] = useState(false)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -139,6 +141,22 @@ function ForecastControls() {
           </div>
         </div>
       )}
+      <div className="field">
+        <label className="field-label">Compare models</label>
+        <div className="compare-list">
+          {OM_MODELS.filter((m) => m.id !== model && m.id !== 'best_match').map((m) => (
+            <label key={m.id} className="check-row compare-row">
+              <input
+                type="checkbox"
+                checked={compareModels.includes(m.id)}
+                onChange={() => void toggleCompareModel(m.id)}
+              />
+              <span className="model-swatch" style={{ background: m.color }} />
+              <span>{m.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

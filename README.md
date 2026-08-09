@@ -75,6 +75,11 @@ day gridlines, and a surface strip chart of model CAPE bars with 2 m T/Td
 traces. Hover for a full readout at any hour/level; click a column to jump the
 forecast hour (the Skew-T view and analysis panel follow).
 
+**Multi-model comparison** (forecast mode) — overlay any set of models on the
+primary profile at the same valid hour as thin color-coded curves (solid T,
+dashed Td) with an in-diagram legend; scrubbing the hour keeps them in sync,
+so model spread is visible at a glance.
+
 Also: **sounding modification** (pencil-toggle, then drag the T/Td curves —
 Gaussian nudge, full re-analysis on release), **pin-as-reference comparison**
 (overlay any sounding on any other: obs vs. model, run vs. run), **PNG export**,

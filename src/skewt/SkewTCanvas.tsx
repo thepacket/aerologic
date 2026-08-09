@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '../state/store'
 import { makeDims, pFromY, xFromTY, yFromP, inPlot } from './transform'
-import { drawBackground, drawData, drawHover, drawReference, nearestLevel } from './render'
+import { drawBackground, drawData, drawHover, drawModelOverlay, drawReference, nearestLevel } from './render'
 import { registerSkewTCanvas } from './exportPng'
+import { forecastSounding, modelMeta } from '../data/openmeteo'
 import { theta, thetaE, wetBulb, relHumidity, mixingRatio } from '../met/thermo'
 import { MS2KT } from '../met/kinematics'
 
@@ -28,6 +29,12 @@ export function SkewTCanvas() {
   const windUnit = useStore((s) => s.windUnit)
   const editMode = useStore((s) => s.editMode)
   const reference = useStore((s) => s.reference)
+  const mode = useStore((s) => s.mode)
+  const forecast = useStore((s) => s.forecast)
+  const forecastHour = useStore((s) => s.forecastHour)
+  const compareModels = useStore((s) => s.compareModels)
+  const compareData = useStore((s) => s.compareData)
+  const primaryModel = useStore((s) => s.model)
   const beginEdit = useStore((s) => s.beginEdit)
   const updateEdit = useStore((s) => s.updateEdit)
   const endEdit = useStore((s) => s.endEdit)
@@ -38,6 +45,27 @@ export function SkewTCanvas() {
     () => (size.w > 0 ? makeDims(size.w, size.h, pDomain) : null),
     [size, pDomain],
   )
+
+  /** comparison-model soundings for the current valid hour */
+  const overlaySoundings = useMemo(() => {
+    if (mode !== 'fcst' || !forecast || compareModels.length === 0) return []
+    const validTime = forecast.hours[forecastHour]
+    if (!validTime) return []
+    const out: { snd: ReturnType<typeof forecastSounding>; color: string; short: string; loading?: boolean }[] = []
+    for (const id of compareModels) {
+      if (id === primaryModel) continue
+      const meta = modelMeta(id)
+      const fc = compareData[id]
+      if (!fc) {
+        out.push({ snd: null, color: meta.color, short: meta.short, loading: true })
+        continue
+      }
+      const hi = fc.hours.indexOf(validTime)
+      if (hi < 0) continue
+      out.push({ snd: forecastSounding(fc, hi, meta.short), color: meta.color, short: meta.short })
+    }
+    return out
+  }, [mode, forecast, forecastHour, compareModels, compareData, primaryModel])
 
   // resize observer
   useEffect(() => {
@@ -64,9 +92,12 @@ export function SkewTCanvas() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     drawBackground(ctx, dims, overlays)
     if (reference && reference.sounding !== sounding) drawReference(ctx, dims, reference.sounding)
+    for (const ov of overlaySoundings) {
+      if (ov.snd) drawModelOverlay(ctx, dims, ov.snd, ov.color)
+    }
     if (sounding) drawData(ctx, dims, sounding, analysis, parcelKind, overlays)
     registerSkewTCanvas(canvas)
-  }, [dims, size, sounding, analysis, parcelKind, overlays, reference])
+  }, [dims, size, sounding, analysis, parcelKind, overlays, reference, overlaySoundings])
 
   // hover overlay draw
   useEffect(() => {
@@ -215,6 +246,21 @@ export function SkewTCanvas() {
     >
       <canvas ref={baseRef} className="skewt-canvas" />
       <canvas ref={overRef} className="skewt-canvas skewt-overlay" />
+      {overlaySoundings.length > 0 && (
+        <div className="model-legend">
+          <span className="model-legend-item">
+            <span className="model-swatch" style={{ background: 'var(--temp)' }} />
+            {modelMeta(primaryModel).short}
+          </span>
+          {overlaySoundings.map((ov) => (
+            <span key={ov.short} className="model-legend-item" data-loading={ov.loading}>
+              <span className="model-swatch" style={{ background: ov.color }} />
+              {ov.short}
+              {ov.loading && '…'}
+            </span>
+          ))}
+        </div>
+      )}
       {!sounding && (
         <div className="stage-empty">
           <div className="stage-empty-title">NO SOUNDING LOADED</div>

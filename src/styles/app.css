@@ -459,6 +459,37 @@ button {
 .inv-chip[data-active='true'] { background: var(--accent-dim); color: #eaf9ff; }
 
 .fcst-transport { display: flex; align-items: center; gap: 5px; }
+
+/* ─── Multi-model comparison ─── */
+
+.model-swatch {
+  display: inline-block;
+  width: 9px;
+  height: 2px;
+  border-radius: 1px;
+  flex: none;
+}
+.compare-row { gap: 6px; }
+
+.model-legend {
+  position: absolute;
+  top: 8px;
+  left: 52px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 9px;
+  font-size: 9.5px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  background: rgba(10, 13, 18, 0.85);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  pointer-events: none;
+}
+.model-legend-item { display: inline-flex; align-items: center; gap: 4px; }
+.model-legend-item[data-loading='true'] { opacity: 0.5; }
 .fcst-transport .range { flex: 1; }
 
 .fcst-scale {

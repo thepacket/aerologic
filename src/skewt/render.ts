@@ -265,6 +265,30 @@ export function drawReference(ctx: CanvasRenderingContext2D, d: SkewTDims, snd: 
   ctx.restore()
 }
 
+/** Thin colored curves for a comparison model at the same valid time. */
+export function drawModelOverlay(
+  ctx: CanvasRenderingContext2D,
+  d: SkewTDims,
+  snd: Sounding,
+  color: string,
+) {
+  const ls = displayLevels(snd, 200)
+  ctx.save()
+  clipPlot(ctx, d)
+  ctx.lineJoin = 'round'
+  ctx.globalAlpha = 0.8
+  ctx.strokeStyle = color
+  ctx.lineWidth = 1.2
+  tracePath(ctx, d, ls.map((l) => ({ p: l.p, v: l.t })))
+  ctx.stroke()
+  ctx.setLineDash([3, 3])
+  ctx.lineWidth = 1
+  tracePath(ctx, d, ls.map((l) => ({ p: l.p, v: l.td })))
+  ctx.stroke()
+  ctx.setLineDash([])
+  ctx.restore()
+}
+
 /** Cloud / icing bands drawn as a strip along the inside-left edge. */
 function drawLayerBands(ctx: CanvasRenderingContext2D, d: SkewTDims, analysis: Analysis) {
   for (const layer of analysis.layers) {
