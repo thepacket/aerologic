@@ -88,7 +88,15 @@ async function serveStatic(req, res, url) {
   }
   try {
     const body = await readFile(file)
-    res.writeHead(200, { 'Content-Type': MIME[extname(file)] ?? 'application/octet-stream' })
+    // Vite content-hashes everything under /assets, so those are immutable;
+    // the HTML shell must always be revalidated or clients keep old bundles.
+    const cache = file.includes('/assets/')
+      ? 'public, max-age=31536000, immutable'
+      : 'no-cache'
+    res.writeHead(200, {
+      'Content-Type': MIME[extname(file)] ?? 'application/octet-stream',
+      'Cache-Control': cache,
+    })
     res.end(body)
   } catch {
     res.writeHead(404)
