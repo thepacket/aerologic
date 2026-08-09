@@ -4,6 +4,13 @@ An interactive Skew-T log-P diagram for real radiosonde soundings and forecast
 profiles. Dark, dense, instrument-style UI; all thermodynamics computed
 in-browser from first principles.
 
+![Skew-T view — Maniwaki 1-second BUFR sounding with hover readout](docs/skewt.png)
+
+*Time × height section of a model run — wind speed field with barbs, isotherm
+overlays, and the model-CAPE / 2 m T/Td strip chart:*
+
+![Time-height wind view](docs/timeheight-wind.png)
+
 ## Data sources
 
 - **Observed** — University of Wyoming upper-air archive (`weather.uwyo.edu/wsgi`).
