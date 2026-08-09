@@ -48,7 +48,8 @@ All from scratch in `src/met/` (validated against Wyoming's own indices):
   the two-tier SPC algorithm, giving sig-hail / tornado probabilities and a
   list of historical quality analogues. Databases by Ryan Jewell and Rich
   Thompson (NOAA SPC), distributed with [SHARPpy](https://github.com/sharppy/SHARPpy)
-  (BSD); the matching logic is a TypeScript port of SHARPpy's `sars.py`.
+  (BSD 3-Clause — see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md));
+  the matching logic is a TypeScript port of SHARPpy's `sars.py`.
   The ~160 KB of database text is code-split into a lazy-loaded immutable
   chunk, so it never weighs on initial page load.
 - **PW climatology** — precipitable water shown against the station's monthly
