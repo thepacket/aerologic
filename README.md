@@ -40,7 +40,9 @@ All from scratch in `src/met/` (validated against Wyoming's own indices):
   wind difference, and effective SCP/STP alongside the fixed-layer variants
 - CCL and convective (trigger) temperature; soaring thermal tops
 - Fire weather: Haines index (elevation variant), mixing height, transport wind
-- Winter: dendritic growth zone depth and mean RH
+- Winter: precipitation type via the Bourgouin (2000) energy-area method
+  (SN / RA / FZRA / IP and mixes, with warm-nose and melt/refreeze energies),
+  Kuchera snow-liquid ratio, dendritic growth zone depth and mean RH
 - Cloud and airframe-icing layer detection (drawn as bands on the diagram)
 - SHIP composite
 - **SARS analogues** — the current sounding is matched against the SPC
@@ -77,7 +79,10 @@ Also: **sounding modification** (pencil-toggle, then drag the T/Td curves —
 Gaussian nudge, full re-analysis on release), **pin-as-reference comparison**
 (overlay any sounding on any other: obs vs. model, run vs. run), **PNG export**,
 **URL permalinks** (`#m=obs&st=71722&c=2026-08-09T00`), forecast hour
-animation, click-anywhere forecast points, and favorite/recent stations.
+animation, click-anywhere forecast points, favorite/recent stations, and an
+**archive inventory calendar** — a month grid showing exactly which launches
+exist for the station (via the archive's INVENTORY pages, back decades);
+click any cycle chip to load it.
 
 ## Run
 

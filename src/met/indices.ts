@@ -10,6 +10,8 @@ import type { EffectiveLayer, EffectiveKinematics } from './effective'
 import { effectiveInflowLayer, effectiveKinematics } from './effective'
 import type { AtmosLayer, DGZ, FireWeather } from './derived'
 import { cclAndTconv, dendriticGrowthZone, detectLayers, fireWeather, thermalTop } from './derived'
+import type { WinterDiag } from './winter'
+import { winterDiagnostics } from './winter'
 
 export interface Analysis {
   prof: EnvProfile
@@ -60,6 +62,7 @@ export interface Analysis {
   fire: FireWeather
   dgz: DGZ | null
   layers: AtmosLayer[]
+  winter: WinterDiag
 }
 
 function lapseRate(prof: EnvProfile, z0AGL: number, z1AGL: number): number {
@@ -258,6 +261,7 @@ export function analyzeSounding(snd: Sounding): Analysis | null {
   const fire = fireWeather(prof, wind)
   const dgz = dendriticGrowthZone(prof)
   const layers = detectLayers(prof)
+  const winter = winterDiagnostics(prof)
 
   return {
     prof,
@@ -301,6 +305,7 @@ export function analyzeSounding(snd: Sounding): Analysis | null {
     fire,
     dgz,
     layers,
+    winter,
   }
 }
 

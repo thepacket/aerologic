@@ -56,7 +56,11 @@ function ParcelBlock({ p, elev }: { p: ParcelResult; elev: number }) {
             : 'none'
         }
       />
-      <Row k="Cap" v={f(p.capStrength, 1, ' °C')} cls={grade(p.capStrength, 2, 4)} />
+      <Row
+        k="Cap"
+        v={Number.isFinite(p.lfcP) ? f(p.capStrength, 1, ' °C') : '—'}
+        cls={Number.isFinite(p.lfcP) ? grade(p.capStrength, 2, 4) : ''}
+      />
     </>
   )
 }
@@ -229,6 +233,33 @@ export function IndicesPanel() {
       </Section>
 
       <Section title="Winter" id="winter">
+        <Row
+          k="P-type"
+          v={a.winter.ptype}
+          cls={
+            a.winter.ptype.includes('FZRA') || a.winter.ptype === 'IP'
+              ? 'idx-hot'
+              : a.winter.ptype.includes('SN')
+                ? 'idx-cool'
+                : ''
+          }
+        />
+        {Number.isFinite(a.winter.warmNoseT) && (
+          <Row
+            k="Warm nose"
+            v={`${a.winter.warmNoseT.toFixed(1)} °C @ ${a.winter.warmNoseP.toFixed(0)} hPa`}
+            cls="idx-warn"
+          />
+        )}
+        {a.winter.naRefreeze > 0 && (
+          <Row
+            k="Melt / refreeze"
+            v={`${a.winter.paAloft.toFixed(0)} / ${a.winter.naRefreeze.toFixed(0)} J/kg`}
+          />
+        )}
+        {a.winter.ptype.includes('SN') && (
+          <Row k="SLR (Kuchera)" v={`${a.winter.kuchera.toFixed(0)}:1`} />
+        )}
         {a.dgz ? (
           <>
             <Row k="DGZ" v={`${a.dgz.bottomP.toFixed(0)}–${a.dgz.topP.toFixed(0)} hPa`} />
@@ -242,6 +273,7 @@ export function IndicesPanel() {
         ) : (
           <div className="idx-note">−12…−18 °C layer not in profile</div>
         )}
+        <div className="idx-note">p-type: Bourgouin (2000) · SLR: Kuchera</div>
       </Section>
 
       <Section title="Layers" id="layers">

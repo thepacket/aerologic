@@ -4,6 +4,7 @@ import { useStore, type Overlays } from '../state/store'
 import { latestCycle } from '../data/wyoming'
 import { OM_MODELS } from '../data/openmeteo'
 import { StationMap } from './StationMap'
+import { InventoryCalendar } from './InventoryCalendar'
 import { Section } from './Section'
 
 function CyclePicker() {
@@ -233,6 +234,7 @@ export function StationPanel() {
         {mode === 'obs' ? (
           <Section title="Launch cycle" id="cycle">
             <CyclePicker />
+            <InventoryCalendar />
           </Section>
         ) : (
           <Section title="Forecast" id="fcst">

@@ -64,3 +64,5 @@ Haines (${a.fire.hainesVariant})     ${fmt(a.fire.haines, 0)}
 mixing height    ${fmt(a.fire.mixingHeight, 0)} m
 DGZ              ${a.dgz ? `${a.dgz.bottomP.toFixed(0)}-${a.dgz.topP.toFixed(0)} hPa, ${a.dgz.depth.toFixed(0)} m, RH ${a.dgz.meanRH.toFixed(0)}%` : 'none'}
 layers           ${a.layers.map((l) => `${l.kind} ${(l.bottomZ - a.prof.z[0]).toFixed(0)}-${(l.topZ - a.prof.z[0]).toFixed(0)}m`).join(' | ') || 'none'}`)
+
+console.log(`winter           ${a.winter.ptype}  warm nose ${Number.isFinite(a.winter.warmNoseT) ? a.winter.warmNoseT.toFixed(1) + 'C@' + a.winter.warmNoseP.toFixed(0) : 'none'}  melt/refreeze ${a.winter.paAloft.toFixed(0)}/${a.winter.naRefreeze.toFixed(0)} J/kg  SLR ${a.winter.kuchera.toFixed(0)}:1`)
