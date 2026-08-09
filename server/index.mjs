@@ -51,28 +51,70 @@ function fetchUpstream(url) {
   })
 }
 
+/** In-flight upstream fetches, so concurrent requests for the same URL share
+ *  one round-trip. */
+const inflight = new Map()
+
+function fetchAndCache(upstream, type, datetimeParam) {
+  let p = inflight.get(upstream)
+  if (!p) {
+    p = fetchUpstream(upstream)
+      .then((body) => {
+        if (cache.size >= MAX_CACHE) cache.delete(cache.keys().next().value)
+        cache.set(upstream, { body, type, expires: Date.now() + cacheTTL(datetimeParam) })
+        return body
+      })
+      .finally(() => inflight.delete(upstream))
+    inflight.set(upstream, p)
+  }
+  return p
+}
+
 async function handleWyoming(req, res, url) {
   // /api/wyo/sounding?...  →  https://weather.uwyo.edu/wsgi/sounding?...
   // /api/wyo/stations?...  →  https://weather.uwyo.edu/wsgi/sounding_json?...
   const path = url.pathname === '/api/wyo/stations' ? 'sounding_json' : 'sounding'
   const upstream = `https://weather.uwyo.edu/wsgi/${path}?${url.searchParams.toString()}`
+  const type = path === 'sounding_json' ? 'application/json' : 'text/plain; charset=utf-8'
+  const datetimeParam = url.searchParams.get('datetime')
 
   const hit = cache.get(upstream)
-  if (hit && hit.expires > Date.now()) {
-    res.writeHead(200, { 'Content-Type': hit.type, 'X-Cache': 'hit' })
+  if (hit) {
+    if (hit.expires <= Date.now()) {
+      // stale-while-revalidate: answer immediately, refresh in background
+      fetchAndCache(upstream, type, datetimeParam).catch(() => {})
+    }
+    res.writeHead(200, { 'Content-Type': hit.type, 'X-Cache': hit.expires > Date.now() ? 'hit' : 'stale' })
     res.end(hit.body)
     return
   }
   try {
-    const body = await fetchUpstream(upstream)
-    const type = path === 'sounding_json' ? 'application/json' : 'text/plain; charset=utf-8'
-    if (cache.size >= MAX_CACHE) cache.delete(cache.keys().next().value)
-    cache.set(upstream, { body, type, expires: Date.now() + cacheTTL(url.searchParams.get('datetime')) })
+    const body = await fetchAndCache(upstream, type, datetimeParam)
     res.writeHead(200, { 'Content-Type': type, 'X-Cache': 'miss' })
     res.end(body)
   } catch (err) {
     res.writeHead(502, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ error: String(err.message ?? err) }))
+  }
+}
+
+/** Cold-start mitigation: the Fly machine auto-stops when idle, wiping the
+ *  in-memory cache — so warm the station lists for the two most recent
+ *  cycles the moment the process boots, while the browser is still loading
+ *  the page shell. */
+function warmCache() {
+  const now = new Date()
+  now.setUTCMinutes(0, 0, 0)
+  now.setUTCHours(now.getUTCHours() >= 12 ? 12 : 0)
+  if (Date.now() - now.getTime() < 75 * 60 * 1000) now.setUTCHours(now.getUTCHours() - 12)
+  const p = (n) => String(n).padStart(2, '0')
+  for (let i = 0; i < 2; i++) {
+    const d = new Date(now.getTime() - i * 12 * 3.6e6)
+    const dt = `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:00:00`
+    // serialize exactly like handleWyoming does, so the cache key matches
+    const sp = new URLSearchParams({ datetime: dt })
+    const upstream = `https://weather.uwyo.edu/wsgi/sounding_json?${sp.toString()}`
+    fetchAndCache(upstream, 'application/json', dt).catch(() => {})
   }
 }
 
@@ -114,4 +156,7 @@ http
     }
     return serveStatic(req, res, url)
   })
-  .listen(PORT, () => console.log(`skew-t server on :${PORT}`))
+  .listen(PORT, () => {
+    console.log(`skew-t server on :${PORT}`)
+    warmCache()
+  })
