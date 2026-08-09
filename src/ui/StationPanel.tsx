@@ -295,7 +295,11 @@ export function StationPanel() {
                 </span>
               </div>
             ))}
-            {filtered.length === 0 && <div className="panel-empty">no matches</div>}
+            {filtered.length === 0 && (
+              <div className="panel-empty">
+                {stations.length === 0 ? 'loading station list…' : 'no matches'}
+              </div>
+            )}
           </div>
         </Section>
 
