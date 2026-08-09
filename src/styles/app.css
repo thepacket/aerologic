@@ -71,6 +71,7 @@ body {
   inset: 0;
   display: grid;
   grid-template-rows: var(--titlebar) minmax(0, 1fr) var(--statusbar);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .shell-body {
@@ -679,6 +680,8 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  overflow: hidden;
   padding: 0 10px;
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
@@ -699,10 +702,17 @@ button {
 .status-dot.err { background: var(--error); box-shadow: 0 0 6px var(--error); }
 @keyframes pulse { 50% { opacity: 0.4; } }
 
-.status-state { color: var(--text-dim); }
-.status-item { white-space: nowrap; }
-.status-spacer { flex: 1; }
-.status-hint { opacity: 0.75; white-space: nowrap; }
+.status-state { color: var(--text-dim); flex-shrink: 0; }
+.status-item { white-space: nowrap; flex-shrink: 0; }
+.status-spacer { flex: 1; min-width: 0; }
+.status-hint {
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex-shrink: 1;
+}
 
 /* ─── Scrollbars ─── */
 

@@ -132,3 +132,8 @@ src/timeheight/    BUFKIT-style time × log-p section of a forecast run
 src/ui/            panels: stations, indices, hodograph, drift, chrome
 scripts/validate.ts  physics check against Wyoming's published indices
 ```
+
+---
+
+© 2026 Andre Paquette · [MIT](LICENSE) ·
+third-party data and code: [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)
