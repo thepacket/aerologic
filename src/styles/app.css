@@ -421,13 +421,46 @@ button {
 
 .skewt-wrap { position: absolute; inset: 0; }
 .th-wrap { position: absolute; inset: 0; cursor: crosshair; }
-.th-fields {
+.th-controls {
   position: absolute;
   top: 8px;
   left: 52px;
   z-index: 6;
-  background: rgba(10, 13, 18, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: default;
 }
+.th-controls .segmented { background: rgba(10, 13, 18, 0.85); }
+
+.th-adjust {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  background: rgba(10, 13, 18, 0.85);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.th-adjust input[type='range'] {
+  width: 62px;
+  accent-color: var(--accent-dim);
+}
+.th-adjust-reset {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-faint);
+  background: rgba(10, 13, 18, 0.85);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.th-adjust-reset:hover { color: var(--text); border-color: var(--line-strong); }
 .th-readout { right: auto; width: 178px; }
 .skewt-canvas { position: absolute; inset: 0; display: block; }
 .skewt-overlay { pointer-events: none; }

@@ -50,6 +50,18 @@ function applyEdits(base: Sounding, edits: SoundingEdit[]): Sounding {
 
 const FAV_KEY = 'skewt:favorites'
 const RECENT_KEY = 'skewt:recents'
+const ADJUST_KEY = 'skewt:th-adjust'
+
+function loadAdjust(): { b: number; c: number } {
+  try {
+    const v = JSON.parse(localStorage.getItem(ADJUST_KEY) ?? '{}')
+    const clamp = (x: unknown) =>
+      typeof x === 'number' && Number.isFinite(x) ? Math.min(Math.max(x, 0.5), 2) : 1
+    return { b: clamp(v.b), c: clamp(v.c) }
+  } catch {
+    return { b: 1, c: 1 }
+  }
+}
 const loadIds = (k: string): string[] => {
   try {
     return JSON.parse(localStorage.getItem(k) ?? '[]')
@@ -116,6 +128,9 @@ interface AppState {
   // stage visualization (time-height is forecast-mode only)
   stageView: StageView
   thField: ThField
+  /** heatmap display adjustments (1 = neutral) */
+  thBrightness: number
+  thContrast: number
 
   setMode: (m: Mode) => void
   setCycle: (d: Date) => Promise<void>
@@ -143,6 +158,7 @@ interface AppState {
   toggleFavorite: (id: string) => void
   setStageView: (v: StageView) => void
   setThField: (f: ThField) => void
+  setThAdjust: (brightness: number, contrast: number) => void
 }
 
 const DEFAULT_DOMAIN: [number, number] = [1050, 100]
@@ -199,6 +215,8 @@ export const useStore = create<AppState>((set, get) => ({
   recents: loadIds(RECENT_KEY),
   stageView: 'skewt',
   thField: 'rh',
+  thBrightness: loadAdjust().b,
+  thContrast: loadAdjust().c,
 
   setMode: (mode) => {
     set({ mode })
@@ -340,6 +358,10 @@ export const useStore = create<AppState>((set, get) => ({
 
   setStageView: (stageView) => set({ stageView }),
   setThField: (thField) => set({ thField }),
+  setThAdjust: (thBrightness, thContrast) => {
+    localStorage.setItem(ADJUST_KEY, JSON.stringify({ b: thBrightness, c: thContrast }))
+    set({ thBrightness, thContrast })
+  },
 
   toggleFavorite: (id) => {
     const favs = get().favorites.includes(id)

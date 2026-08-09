@@ -188,6 +188,7 @@ const FIELD_LABELS: Record<ThField, string> = {
 
 export function TimeHeight() {
   const wrapRef = useRef<HTMLDivElement>(null)
+  const heatRef = useRef<HTMLCanvasElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const overRef = useRef<HTMLCanvasElement>(null)
   const [size, setSize] = useState({ w: 0, h: 0 })
@@ -198,6 +199,9 @@ export function TimeHeight() {
   const setForecastHour = useStore((s) => s.setForecastHour)
   const thField = useStore((s) => s.thField)
   const setThField = useStore((s) => s.setThField)
+  const thBrightness = useStore((s) => s.thBrightness)
+  const thContrast = useStore((s) => s.thContrast)
+  const setThAdjust = useStore((s) => s.setThAdjust)
   const windUnit = useStore((s) => s.windUnit)
 
   const grid = useMemo(() => (forecast ? buildGrid(forecast) : null), [forecast])
@@ -226,9 +230,10 @@ export function TimeHeight() {
     return { w, h, n, x, iFromX, y, pFromY, stripY: MARGIN.t + h + AXIS_H }
   }, [size, grid])
 
-  // main draw
+  // heatmap layer: its own canvas so brightness/contrast can be applied as a
+  // GPU CSS filter without touching the line overlays
   useEffect(() => {
-    const canvas = canvasRef.current
+    const canvas = heatRef.current
     if (!canvas || !dims || !grid) return
     const dpr = window.devicePixelRatio || 1
     canvas.width = Math.round(size.w * dpr)
@@ -237,13 +242,14 @@ export function TimeHeight() {
     canvas.style.height = `${size.h}px`
     const ctx = canvas.getContext('2d')!
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    ctx.fillStyle = '#07090c'
-    ctx.fillRect(0, 0, size.w, size.h)
+    ctx.clearRect(0, 0, size.w, size.h)
 
-    const { n, x, y, pFromY, h } = dims
+    const { n, x, pFromY, h } = dims
     const dx = dims.w / (n - 1)
+    // opaque plot-area base so the filter operates on predictable pixels
+    ctx.fillStyle = '#07090c'
+    ctx.fillRect(MARGIN.l, MARGIN.t, dims.w, h)
 
-    // ── heatmap: per hour column, vertical strips of 3 px
     const step = 3
     for (let i = 0; i < n; i++) {
       const cx = x(i)
@@ -262,6 +268,23 @@ export function TimeHeight() {
         ctx.fillRect(cx - dx / 2 - 0.5, py, dx + 1, step)
       }
     }
+  }, [dims, grid, size, thField])
+
+  // line work: isotherms, barbs, axes, strip chart, legend
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas || !dims || !grid) return
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = Math.round(size.w * dpr)
+    canvas.height = Math.round(size.h * dpr)
+    canvas.style.width = `${size.w}px`
+    canvas.style.height = `${size.h}px`
+    const ctx = canvas.getContext('2d')!
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.clearRect(0, 0, size.w, size.h)
+
+    const { n, x, y, h } = dims
+    const dx = dims.w / (n - 1)
 
     // ── isotherm overlay: crossings per column, connected between columns.
     // A dark halo keeps the lines legible over bright heatmap regions.
@@ -544,22 +567,62 @@ export function TimeHeight() {
         if (i >= 0 && i < dims.n) setForecastHour(i)
       }}
     >
+      <canvas
+        ref={heatRef}
+        className="skewt-canvas"
+        style={{
+          filter:
+            thBrightness !== 1 || thContrast !== 1
+              ? `brightness(${thBrightness}) contrast(${thContrast})`
+              : undefined,
+        }}
+      />
       <canvas ref={canvasRef} className="skewt-canvas" />
       <canvas ref={overRef} className="skewt-canvas skewt-overlay" />
-      <div className="th-fields segmented">
-        {(['rh', 'thetae', 'temp', 'wind'] as const).map((f) => (
+      <div className="th-controls" onClick={(e) => e.stopPropagation()}>
+        <div className="segmented">
+          {(['rh', 'thetae', 'temp', 'wind'] as const).map((f) => (
+            <button
+              key={f}
+              className="seg-btn"
+              data-active={thField === f}
+              onClick={() => setThField(f)}
+            >
+              {f === 'rh' ? 'RH' : f === 'thetae' ? 'θE' : f === 'temp' ? 'TEMP' : 'WIND'}
+            </button>
+          ))}
+        </div>
+        <label className="th-adjust" title="brightness">
+          <span>☀</span>
+          <input
+            type="range"
+            min={0.6}
+            max={1.6}
+            step={0.02}
+            value={thBrightness}
+            onChange={(e) => setThAdjust(Number(e.target.value), thContrast)}
+          />
+        </label>
+        <label className="th-adjust" title="contrast">
+          <span>◐</span>
+          <input
+            type="range"
+            min={0.6}
+            max={1.8}
+            step={0.02}
+            value={thContrast}
+            onChange={(e) => setThAdjust(thBrightness, Number(e.target.value))}
+          />
+        </label>
+        {(thBrightness !== 1 || thContrast !== 1) && (
           <button
-            key={f}
-            className="seg-btn"
-            data-active={thField === f}
-            onClick={(e) => {
-              e.stopPropagation()
-              setThField(f)
-            }}
+            className="th-adjust-reset"
+            title="reset brightness/contrast"
+            onClick={() => setThAdjust(1, 1)}
           >
-            {f === 'rh' ? 'RH' : f === 'thetae' ? 'θE' : f === 'temp' ? 'TEMP' : 'WIND'}
+            ×
           </button>
-        ))}
+        )}
       </div>
       {readout && (
         <div
