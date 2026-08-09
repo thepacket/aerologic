@@ -11,6 +11,7 @@ export function InventoryCalendar() {
   const selected = useStore((s) => s.selected)
   const cycle = useStore((s) => s.cycle)
   const setCycle = useStore((s) => s.setCycle)
+  const soundingLoading = useStore((s) => s.loading)
 
   const [view, setView] = useState(() => ({
     year: cycle.getUTCFullYear(),
@@ -24,28 +25,35 @@ export function InventoryCalendar() {
     setView({ year: cycle.getUTCFullYear(), month: cycle.getUTCMonth() })
   }, [cycle])
 
+  // The archive's INVENTORY pages are expensive for its server to build, so
+  // never race one against the sounding fetch itself — wait until the
+  // sounding has finished loading before asking for the calendar.
   useEffect(() => {
     if (!selected || selected.stationid.startsWith('@')) {
       setInv(null)
       return
     }
+    if (soundingLoading) return
     let alive = true
     setState('loading')
-    fetchInventory(selected.stationid, selected.src, view.year)
-      .then((i) => {
-        if (!alive) return
-        setInv(i)
-        setState('idle')
-      })
-      .catch(() => {
-        if (!alive) return
-        setInv(null)
-        setState('error')
-      })
+    const t = setTimeout(() => {
+      fetchInventory(selected.stationid, selected.src, view.year)
+        .then((i) => {
+          if (!alive) return
+          setInv(i)
+          setState('idle')
+        })
+        .catch(() => {
+          if (!alive) return
+          setInv(null)
+          setState('error')
+        })
+    }, 250)
     return () => {
       alive = false
+      clearTimeout(t)
     }
-  }, [selected, view.year])
+  }, [selected, view.year, soundingLoading])
 
   const grid = useMemo(() => {
     const first = new Date(Date.UTC(view.year, view.month, 1))
