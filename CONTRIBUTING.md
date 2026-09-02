@@ -1,4 +1,4 @@
 # Contributing
 
-This is a personal project. **Pull requests are not accepted** and will be
-closed automatically. Feel free to fork.
+Pull requests, bug reports and ideas are welcome. Keep a pull request focused
+on one change and say how you checked it. Forking is welcome too.
